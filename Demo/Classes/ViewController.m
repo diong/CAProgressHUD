@@ -15,6 +15,49 @@
     return YES;
 }
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [self openGif];
+    [SVProgressHUD setForegroundColor:[UIColor whiteColor]];
+    [SVProgressHUD setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:0.4]];
+}
+
+- (void)openGif
+{
+    NSArray *imagesArray = [NSArray arrayWithObjects:
+                            [UIImage imageNamed:@"1.png"],
+                            [UIImage imageNamed:@"2.png"],
+                            [UIImage imageNamed:@"3.png"],
+                            [UIImage imageNamed:@"4.png"],
+                            [UIImage imageNamed:@"5.png"],
+                            [UIImage imageNamed:@"6.png"],
+                            [UIImage imageNamed:@"7.png"],
+                            [UIImage imageNamed:@"8.png"],
+                            [UIImage imageNamed:@"9.png"],
+                            [UIImage imageNamed:@"10.png"],
+                            [UIImage imageNamed:@"11.png"],
+                            [UIImage imageNamed:@"12.png"],
+                            [UIImage imageNamed:@"13.png"],
+                            [UIImage imageNamed:@"14.png"],
+                            [UIImage imageNamed:@"15.png"],
+                            [UIImage imageNamed:@"16.png"],
+                            [UIImage imageNamed:@"17.png"],nil];
+    [SVProgressHUD setLoaingAnimationImages:imagesArray imageSize:CGSizeMake(100, 100)];
+}
+
+- (void)closeGif
+{
+    [SVProgressHUD setLoaingAnimationImages:nil imageSize:CGSizeZero];
+}
 
 #pragma mark - Notification Methods Sample
 
@@ -50,6 +93,15 @@
 
 
 #pragma mark - Show Methods Sample
+
+- (IBAction)btnSwitchGif:(UISwitch *)btnSwitch
+{
+    if (btnSwitch.on) {
+        [self openGif];
+    }else {
+        [self closeGif];
+    }
+}
 
 - (void)show {
 	[SVProgressHUD show];

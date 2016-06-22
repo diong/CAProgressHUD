@@ -37,6 +37,7 @@ static const CGFloat SVProgressHUDRingRadius = 18;
 static const CGFloat SVProgressHUDRingNoTextRadius = 24;
 static const CGFloat SVProgressHUDParallaxDepthPoints = 10;
 static const CGFloat SVProgressHUDUndefinedProgress = -1;
+static const CGFloat SVProgressHUDUndefinedProgress2 = -2;
 
 @interface SVProgressHUD ()
 
@@ -57,6 +58,11 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 
 @property (nonatomic, readonly) CGFloat visibleKeyboardHeight;
 @property (nonatomic, assign) UIOffset offsetFromCenter;
+
+@property (nonatomic, strong) NSArray *animateImages;
+@property (nonatomic, assign) CGSize animateImageSize;
+@property (nonatomic, strong) UIImageView *animateImageView;
+@property (nonatomic, assign) BOOL isShowAnimate;
 
 
 - (void)showProgress:(float)progress status:(NSString*)string maskType:(SVProgressHUDMaskType)hudMaskType;
@@ -85,6 +91,18 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 
 
 #pragma mark - Setters
++ (void)setLoaingAnimationImages:(NSArray <UIImage *> *)images
+{
+    [SVProgressHUD setLoaingAnimationImages:images imageSize:CGSizeZero];
+}
+
++ (void)setLoaingAnimationImages:(NSArray <UIImage *> *)images imageSize:(CGSize)size
+{
+    [self sharedView].animateImages = images;
+    [self sharedView].animateImageSize = size;
+    [self sharedView].animateImageView.animationImages = images;
+    [self sharedView].animateImageView.animationDuration = images.count * 0.04;
+}
 
 + (void)setStatus:(NSString *)string {
 	[[self sharedView] setStatus:string];
@@ -381,7 +399,16 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
         }
     }
 	
-	self.hudView.bounds = CGRectMake(0.0f, 0.0f, hudWidth, hudHeight);
+    self.hudView.bounds = CGRectMake(0.0f, 0.0f, hudWidth, hudHeight);
+    if (self.isShowAnimate) {
+        if (!CGSizeEqualToSize(self.animateImageSize, CGSizeZero)) {
+            hudWidth = self.animateImageSize.width;
+            hudHeight = self.animateImageSize.height;
+        }
+        self.hudView.bounds = CGRectMake(0.0f, 0.0f, hudWidth, hudHeight);
+        self.animateImageView.bounds = self.hudView.bounds;
+        self.animateImageView.center = CGPointMake(hudWidth/2.0, hudHeight/2.0);
+    }
     
     if(string)
         self.imageView.center = CGPointMake(CGRectGetWidth(self.hudView.bounds)/2, 36.0f);
@@ -390,6 +417,9 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 	
 	self.stringLabel.hidden = NO;
 	self.stringLabel.frame = labelRect;
+    if (self.isShowAnimate) {
+        self.stringLabel.hidden = YES;
+    }
     
     [CATransaction begin];
     [CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
@@ -584,10 +614,48 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     }
 }
 
+#pragma mark - gif
+- (void)showAnimateSetting
+{
+    self.animateImageView.hidden = NO;
+    [self.animateImageView startAnimating];
+    self.indefiniteAnimatedView.hidden = YES;
+    self.stringLabel.hidden = YES;
+    self.hudView.backgroundColor = [UIColor clearColor];
+}
+
+- (void)hideAnimateSetting
+{
+    [self.animateImageView stopAnimating];
+    self.animateImageView.hidden = YES;
+    self.indefiniteAnimatedView.hidden = NO;
+    self.stringLabel.hidden = NO;
+    self.hudView.backgroundColor = SVProgressHUDBackgroundColor;
+}
+
 
 #pragma mark - Master show/dismiss methods
 
 - (void)showProgress:(float)progress status:(NSString*)string maskType:(SVProgressHUDMaskType)hudMaskType {
+    if (self.animateImages.count > 0) {
+        if (progress == SVProgressHUDUndefinedProgress) {
+            self.isShowAnimate = YES;
+        }else if(progress != SVProgressHUDUndefinedProgress2) {
+            self.isShowAnimate = NO;
+        }
+        if (self.isShowAnimate) {
+            // 动画代替loading
+            [self showAnimateSetting];
+        }else {
+            [self hideAnimateSetting];
+        }
+    }else {
+        self.isShowAnimate = NO;
+    }
+    if (progress == SVProgressHUDUndefinedProgress2) {
+        progress = SVProgressHUDUndefinedProgress;
+    }
+    
     if(!self.overlayView.superview){
 #if !defined(SV_APP_EXTENSIONS)
         NSEnumerator *frontToBackWindows = [UIApplication.sharedApplication.windows reverseObjectEnumerator];
@@ -703,12 +771,16 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
 }
 
 - (void)showImage:(UIImage *)image status:(NSString *)string duration:(NSTimeInterval)duration maskType:(SVProgressHUDMaskType)hudMaskType {
+    self.isShowAnimate = NO;
+    [self hideAnimateSetting];
+    
     self.progress = SVProgressHUDUndefinedProgress;
     self.maskType = hudMaskType;
     [self cancelRingLayerAnimation];
     
     if(![self.class isVisible])
-        [self.class showWithMaskType:self.maskType];
+       [self.class showProgress:SVProgressHUDUndefinedProgress2 maskType:self.maskType];
+//        [self.class showWithMaskType:self.maskType];
   
     if ([self.imageView respondsToSelector:@selector(setTintColor:)]) {
         self.imageView.tintColor = SVProgressHUDForegroundColor;
@@ -954,6 +1026,18 @@ static const CGFloat SVProgressHUDUndefinedProgress = -1;
     return _imageView;
 }
 
+
+- (UIImageView *)animateImageView
+{
+    if (!_animateImageView) {
+        _animateImageView = [[UIImageView alloc] initWithFrame:CGRectZero];
+        _animateImageView.animationRepeatCount = 0;
+    }
+    if (!_animateImageView.superview) {
+        [self.hudView addSubview:_animateImageView];
+    }
+    return _animateImageView;
+}
 
 - (CGFloat)visibleKeyboardHeight {
 #if !defined(SV_APP_EXTENSIONS)

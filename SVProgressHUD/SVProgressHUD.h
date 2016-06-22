@@ -29,6 +29,11 @@ typedef NS_ENUM(NSUInteger, SVProgressHUDMaskType) {
 
 #pragma mark - Customization
 
+// === add by wuzhx ===
++ (void)setLoaingAnimationImages:(NSArray <UIImage *> *)images;                              // 设置loading的帧动画
++ (void)setLoaingAnimationImages:(NSArray <UIImage *> *)images imageSize:(CGSize)size;       // 设置loading的帧动画和动画大小
+// ===
+
 + (void)setBackgroundColor:(UIColor*)color;                 // default is [UIColor whiteColor]
 + (void)setForegroundColor:(UIColor*)color;                 // default is [UIColor blackColor]
 + (void)setRingThickness:(CGFloat)width;                    // default is 4 pt
