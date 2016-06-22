@@ -57,6 +57,13 @@ dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
 
 ### Showing the HUD
 
+You can setting the gif animate using one of the following:
+
+```objective-c
++ (void)setLoaingAnimationImages:(NSArray <UIImage *> *)images;
++ (void)setLoaingAnimationImages:(NSArray <UIImage *> *)images imageSize:(CGSize)size;
+```
+
 You can show the status of indeterminate tasks using one of the following:
 
 ```objective-c
